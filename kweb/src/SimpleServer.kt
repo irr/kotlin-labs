@@ -67,7 +67,7 @@ internal object EmbeddedAsyncServer {
                     EmbeddedAsyncServer.capture("https://api.ipify.org", object : EmbeddedAsyncServerCallback {
                         override fun completed(result: Any) {
                             try {
-                                response.writer.println(Gson().toJson(result))
+                                response.writer.println(Gson().toJson(hashMapOf("ipfy.org" to result)))
                             } catch (e: IOException) {
                                 e.printStackTrace()
                                 response.status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR
