@@ -9,7 +9,9 @@ import org.apache.log4j.BasicConfigurator
 import org.apache.log4j.Level
 import org.apache.log4j.Logger
 import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.servlet.ServletContextHandler
+import org.eclipse.jetty.util.thread.QueuedThreadPool
 import java.io.IOException
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -84,8 +86,12 @@ internal object EmbeddedAsyncServer {
 fun main(args: Array<String>) {
     BasicConfigurator.configure()
     Logger.getRootLogger().level = Level.INFO
-    val server = Server(8080)
+    val threadPool = QueuedThreadPool(32, 16)
+    val server = Server(threadPool)
     val context = ServletContextHandler()
+    val connector = ServerConnector(server);
+    connector.port = 8080
+    server.connectors = arrayOf(connector)
     context.contextPath = "/"
     val asyncHolder = context.addServlet(EmbeddedAsyncServer.EmbeddedAsyncServlet::class.jvmName, "/")
     asyncHolder.isAsyncSupported = true
