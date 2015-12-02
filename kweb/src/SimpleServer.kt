@@ -47,11 +47,9 @@ internal object EmbeddedAsyncServer {
                 }
 
             }
-
             override fun failed(e: Exception) {
                 callback.completed(result)
             }
-
             override fun cancelled() {
                 callback.completed(result)
             }
