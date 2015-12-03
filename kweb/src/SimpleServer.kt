@@ -37,16 +37,12 @@ internal object EmbeddedAsyncServer {
         val request = HttpGet(uri)
         httpclient.execute(request, object : FutureCallback<HttpResponse> {
             override fun completed(httpResponse: HttpResponse) {
-                result["status"] = httpResponse.statusLine.statusCode.toString()
-                try {
-                    val body = IOUtils.toString(httpResponse.entity.content)
-                    result["body"] = body
-                    result["size"] = body.length.toString()
-                    callback.completed(result)
+                result["ip"] = try {
+                    IOUtils.toString(httpResponse.entity.content)
                 } catch (e: IOException) {
-                    e.printStackTrace()
-                    callback.failed(result)
+                    return callback.failed(result)
                 }
+                callback.completed(result)
             }
             override fun failed(e: Exception) {
                 callback.failed(e)
