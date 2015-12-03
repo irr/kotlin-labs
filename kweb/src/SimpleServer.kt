@@ -67,21 +67,12 @@ internal object EmbeddedAsyncServer {
                     response.contentType = "application/json;charset=utf-8"
                     EmbeddedAsyncServer.capture("https://api.ipify.org", object : EmbeddedAsyncServerCallback {
                         override fun completed(result: Any) {
-                            try {
-                                response.writer.println(Gson().toJson(hashMapOf("ipfy.org" to result)))
-                            } catch (e: IOException) {
-                                e.printStackTrace()
-                                response.status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-                            }
+                            response.writer.println(Gson().toJson(hashMapOf("ipfy.org" to result)))
                             ctx.complete()
                         }
                         override fun failed(result: Any?) {
                             response.status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-                            try {
-                                response.writer.println(Gson().toJson(hashMapOf("error" to result)))
-                            } catch (e: IOException) {
-                                e.printStackTrace()
-                            }
+                            response.writer.println(Gson().toJson(hashMapOf("error" to result)))
                             ctx.complete()
                         }
 
