@@ -13,6 +13,7 @@ import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 import java.io.IOException
+import java.util.*
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -20,6 +21,7 @@ import kotlin.reflect.jvm.jvmName
 
 internal interface EmbeddedAsyncServerCallback {
     fun completed(result: Any)
+    fun failed(result: Any? = null)
 }
 
 internal object EmbeddedAsyncServer {
@@ -35,23 +37,22 @@ internal object EmbeddedAsyncServer {
         val request = HttpGet(uri)
         httpclient.execute(request, object : FutureCallback<HttpResponse> {
             override fun completed(httpResponse: HttpResponse) {
-                result.put("status", httpResponse.statusLine.statusCode.toString())
+                result["status"] = httpResponse.statusLine.statusCode.toString()
                 try {
                     val body = IOUtils.toString(httpResponse.entity.content)
-                    result.put("body", body)
-                    result.put("size", body.length.toString())
+                    result["body"] = body
+                    result["size"] = body.length.toString()
                     callback.completed(result)
                 } catch (e: IOException) {
                     e.printStackTrace()
-                    callback.completed(result)
+                    callback.failed(result)
                 }
-
             }
             override fun failed(e: Exception) {
-                callback.completed(result)
+                callback.failed(e)
             }
             override fun cancelled() {
-                callback.completed(result)
+                callback.failed()
             }
         })
     }
@@ -74,6 +75,16 @@ internal object EmbeddedAsyncServer {
                             }
                             ctx.complete()
                         }
+                        override fun failed(result: Any?) {
+                            response.status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+                            try {
+                                response.writer.println(Gson().toJson(hashMapOf("error" to result)))
+                            } catch (e: IOException) {
+                                e.printStackTrace()
+                            }
+                            ctx.complete()
+                        }
+
                     })
                 }
             })
